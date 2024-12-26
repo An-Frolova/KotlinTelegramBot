@@ -3,7 +3,7 @@ import java.io.File
 data class Word(
     val original: String,
     val translate: String,
-    var correctAnswersCount: Int? = 0,
+    var correctAnswersCount: Int = 0,
 )
 
 fun main() {
@@ -17,7 +17,7 @@ fun main() {
             Word(
                 original = line[0],
                 translate = line[1],
-                correctAnswersCount = line[2].takeIf { it.isNotEmpty() }?.toInt() ?: 0
+                correctAnswersCount = line.getOrNull(2)?.toIntOrNull() ?: 0
             )
         )
     }
