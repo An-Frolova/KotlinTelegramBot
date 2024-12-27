@@ -9,12 +9,11 @@ data class Word(
 fun main() {
 
     val dictionary = loadDictionary()
-    var isExit = false
 
-    while (!isExit) {
+    do {
         println(
             """
-            Меню: 
+            Меню:
             1 – Учить слова
             2 – Статистика
             0 – Выход
@@ -23,11 +22,11 @@ fun main() {
         val input = readln()
         when (input) {
             "1" -> println("Выбран пункт \"Учить слова\"")
-            "2" -> println("Выбран пункт \"Статистика\"")
-            "0" -> isExit = true
+            "2" -> getStatistic(dictionary)
+            "0" -> return
             else -> println("Введите число 1, 2 или 0")
         }
-    }
+    } while (input != "0")
 }
 
 fun loadDictionary(): List<Word> {
@@ -45,3 +44,12 @@ fun loadDictionary(): List<Word> {
     }
     return dictionary
 }
+
+fun getStatistic(dictionary: List<Word>) {
+    val totalCount = dictionary.size
+    val correctAnswersCount = dictionary.filter { it.correctAnswersCount >= 3 }.size
+    val percent = ((correctAnswersCount.toDouble()) / (totalCount.toDouble()) * AS_DECIMAL).toInt()
+    println("Выучено $correctAnswersCount из $totalCount слов | $percent%\n")
+}
+
+const val AS_DECIMAL = 100
