@@ -22,7 +22,7 @@ fun main() {
         val input = readln()
         when (input) {
             "1" -> println("Выбран пункт \"Учить слова\"")
-            "2" -> getStatistic(dictionary)
+            "2" -> println(getStatistic(dictionary))
             "0" -> return
             else -> println("Введите число 1, 2 или 0")
         }
@@ -45,11 +45,13 @@ fun loadDictionary(): List<Word> {
     return dictionary
 }
 
-fun getStatistic(dictionary: List<Word>) {
+fun getStatistic(dictionary: List<Word>): String {
     val totalCount = dictionary.size
-    val correctAnswersCount = dictionary.filter { it.correctAnswersCount >= 3 }.size
+    val correctAnswersCount = dictionary.filter { it.correctAnswersCount >= CORRECT_ANSWERS_TO_LEARN }.size
     val percent = ((correctAnswersCount.toDouble()) / (totalCount.toDouble()) * AS_DECIMAL).toInt()
-    println("Выучено $correctAnswersCount из $totalCount слов | $percent%\n")
+    val statistic = "Выучено $correctAnswersCount из $totalCount слов | $percent%\n"
+    return statistic
 }
 
 const val AS_DECIMAL = 100
+const val CORRECT_ANSWERS_TO_LEARN = 3
