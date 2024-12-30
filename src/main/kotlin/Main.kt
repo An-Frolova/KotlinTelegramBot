@@ -21,7 +21,7 @@ fun main() {
         )
         val input = readln()
         when (input) {
-            "1" -> println("Выбран пункт \"Учить слова\"")
+            "1" -> learnWords(dictionary)
             "2" -> println(getStatistic(dictionary))
             "0" -> return
             else -> println("Введите число 1, 2 или 0")
@@ -53,5 +53,40 @@ fun getStatistic(dictionary: List<Word>): String {
     return statistic
 }
 
+fun learnWords(dictionary: List<Word>) {
+    do {
+        val notLearnedList = dictionary.filter { word: Word -> word.correctAnswersCount < CORRECT_ANSWERS_TO_LEARN }
+        if (notLearnedList.isEmpty()) {
+            println("Все слова в словаре выучены")
+            return
+        }
+        val questionWords = notLearnedList.shuffled().take(COUNT_OF_WORDS_FOR_QUESTION).toMutableList()
+        val word = questionWords.random()
+
+        if (questionWords.size < COUNT_OF_WORDS_FOR_QUESTION && dictionary.size < COUNT_OF_WORDS_FOR_QUESTION) {
+            println(
+                "В словаре недостаточно слов! Минимальное количество слов, необходимое для изучения - " +
+                        "$COUNT_OF_WORDS_FOR_QUESTION"
+            )
+            return
+        } else if (questionWords.size < COUNT_OF_WORDS_FOR_QUESTION && dictionary.size > COUNT_OF_WORDS_FOR_QUESTION) {
+            while (questionWords.size < COUNT_OF_WORDS_FOR_QUESTION) {
+                val learnedWord = dictionary.random()
+                if (learnedWord !in questionWords) {
+                    questionWords.add(learnedWord)
+                }
+            }
+            questionWords.shuffle()
+        }
+
+        println("\n${word.original}:")
+        for (i in 0..<questionWords.size) {
+            println("${i + 1} - ${questionWords[i].translate}")
+        }
+        val userAnswer = readln()
+    } while (notLearnedList.isNotEmpty())
+}
+
 const val AS_DECIMAL = 100
 const val CORRECT_ANSWERS_TO_LEARN = 3
+const val COUNT_OF_WORDS_FOR_QUESTION = 4
