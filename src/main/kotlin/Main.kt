@@ -57,7 +57,7 @@ fun learnWords(dictionary: List<Word>) {
     do {
         val notLearnedList = dictionary.filter { word: Word -> word.correctAnswersCount < CORRECT_ANSWERS_TO_LEARN }
         if (notLearnedList.isEmpty()) {
-            println("Все слова в словаре выучены")
+            println("Все слова в словаре выучены\n")
             return
         }
         val questionWords = notLearnedList.shuffled().take(COUNT_OF_WORDS_FOR_QUESTION).toMutableList()
@@ -66,7 +66,7 @@ fun learnWords(dictionary: List<Word>) {
         if (questionWords.size < COUNT_OF_WORDS_FOR_QUESTION && dictionary.size < COUNT_OF_WORDS_FOR_QUESTION) {
             println(
                 "В словаре недостаточно слов! Минимальное количество слов, необходимое для изучения - " +
-                        "$COUNT_OF_WORDS_FOR_QUESTION"
+                        "$COUNT_OF_WORDS_FOR_QUESTION\n"
             )
             return
         } else if (questionWords.size < COUNT_OF_WORDS_FOR_QUESTION && dictionary.size > COUNT_OF_WORDS_FOR_QUESTION) {
@@ -83,8 +83,39 @@ fun learnWords(dictionary: List<Word>) {
         for (i in 0..<questionWords.size) {
             println("${i + 1} - ${questionWords[i].translate}")
         }
-        val userAnswer = readln()
+        println("----------\n0 - Меню")
+
+        val userAnswer = readln().toInt()
+        when (userAnswer) {
+            0 -> {
+                println("")
+                return
+            }
+        }
+        val rightAnswer = questionWords.indexOf(word) + 1
+        if (userAnswer == rightAnswer) {
+            println("Правильно!")
+            word.correctAnswersCount++
+            saveDictionary(word)
+        } else {
+            println("Неправильно - слово \"${word.translate}\"")
+        }
+
     } while (notLearnedList.isNotEmpty())
+}
+
+fun saveDictionary(learnedWord: Word) {
+    val dictionaryFile = File("words.txt")
+    val lines = dictionaryFile.readLines().toMutableList()
+    for (i in lines.indices) {
+        val parts = lines[i].split("|")
+        if (parts[0] == learnedWord.original) {
+            val updatedLine = "${parts[0]}|${parts[1]}|${learnedWord.correctAnswersCount}"
+            lines[i] = updatedLine
+            break
+        }
+    }
+    dictionaryFile.writeText(lines.joinToString("\n"))
 }
 
 const val AS_DECIMAL = 100
