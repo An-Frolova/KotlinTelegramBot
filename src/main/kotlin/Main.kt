@@ -1,6 +1,11 @@
 fun main() {
 
-    val trainer = LearnWordsTrainer()
+    val trainer = try {
+        LearnWordsTrainer()
+    } catch (e: Exception) {
+        println("unable to load dictionary")
+        return
+    }
 
     while (true) {
         println(
@@ -29,19 +34,22 @@ fun main() {
     }
 }
 
+fun Question.asConsoleString(): String {
+    val variants = this.variants
+        .mapIndexed { index, word -> " ${index + 1} - ${word.translate}" }
+        .joinToString(separator = "\n")
+    return this.correctAnswer.original + "\n" + variants + "\n 0 - выйти в меню"
+}
+
 fun learnWords(trainer: LearnWordsTrainer) {
     while (true) {
         val question = trainer.getNewQuestion()
         if (question == null) {
-            println("Все слова в словаре выучены или в словаре недостаточно слов\n")
+            println("Все слова выучены или в словаре недостаточно слов\n")
             break
         } else {
-            println("\n${question.correctAnswer.original}:")
-            for (i in 0..<question.variants.size) {
-                println("${i + 1} - ${question.variants[i].translate}")
-            }
-            println("----------\n0 - Меню")
-            val userAnswer = readln().toInt()
+            println(question.asConsoleString())
+            val userAnswer = readln().toIntOrNull()
             when (userAnswer) {
                 0 -> {
                     println("")
@@ -49,9 +57,9 @@ fun learnWords(trainer: LearnWordsTrainer) {
                 }
             }
             if (trainer.isAnswerCorrect(userAnswer)) {
-                println("Правильно!")
+                println("Правильно!\n")
             } else {
-                println("Неправильно - слово \"${question.correctAnswer.translate}\"")
+                println("Неправильно - слово \"${question.correctAnswer.translate}\"\n")
             }
         }
     }
