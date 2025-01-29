@@ -13,11 +13,21 @@ fun main(args: Array<String>) {
         val updates: String = getUpdates(botToken, updateId)
         println(updates)
 
-        val startUpdateId = updates.lastIndexOf("update_id")
-        val endUpdateId = updates.lastIndexOf(",\n\"message\"")
-        if (startUpdateId == -1 || endUpdateId == -1) continue
-        val updateIdString = updates.substring(startUpdateId + 11, endUpdateId)
-        updateId = updateIdString.toInt() + 1
+        val updateIdRegex: Regex = "\"update_id\":(\\d{9})".toRegex()
+        val matchResultForUpdateId: MatchResult? = updateIdRegex.find(updates)
+        val groupsForUpdateId: MatchGroupCollection? = matchResultForUpdateId?.groups
+        val groupsSize = groupsForUpdateId?.size
+        if (groupsSize != null) {
+            updateId = groupsForUpdateId.let {
+                it[groupsSize - 1]?.value?.toInt()?.plus(1)
+            } ?: throw IllegalArgumentException("Invalid updateId")
+        }
+
+        val messageTextRegex: Regex = "\"text\":\"(.+?)\"".toRegex()
+        val matchResultForMessageText: MatchResult? = messageTextRegex.find(updates)
+        val groupsForMessageText: MatchGroupCollection? = matchResultForMessageText?.groups
+        val text = groupsForMessageText?.get(1)?.value
+        println(text)
     }
 }
 
