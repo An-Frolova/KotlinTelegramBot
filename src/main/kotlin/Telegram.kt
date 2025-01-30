@@ -7,13 +7,14 @@ fun main(args: Array<String>) {
 
     val botToken = args[0]
     var updateId = 0
+    val updateIdRegex: Regex = "\"update_id\":(\\d{9})".toRegex()
+    val messageTextRegex: Regex = "\"text\":\"(.+?)\"".toRegex()
 
     while (true) {
         Thread.sleep(2000)
         val updates: String = getUpdates(botToken, updateId)
         println(updates)
 
-        val updateIdRegex: Regex = "\"update_id\":(\\d{9})".toRegex()
         val matchResultForUpdateId: MatchResult? = updateIdRegex.find(updates)
         val groupsForUpdateId: MatchGroupCollection? = matchResultForUpdateId?.groups
         val groupsSize = groupsForUpdateId?.size
@@ -23,7 +24,6 @@ fun main(args: Array<String>) {
             } ?: throw IllegalArgumentException("Invalid updateId")
         }
 
-        val messageTextRegex: Regex = "\"text\":\"(.+?)\"".toRegex()
         val matchResultForMessageText: MatchResult? = messageTextRegex.find(updates)
         val groupsForMessageText: MatchGroupCollection? = matchResultForMessageText?.groups
         val text = groupsForMessageText?.get(1)?.value
