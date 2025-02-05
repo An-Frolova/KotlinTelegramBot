@@ -20,6 +20,38 @@ class TelegramBotService(private val botToken: String) {
         val response = client.send(request, HttpResponse.BodyHandlers.ofString())
         return response.body()
     }
+
+    fun sendMenu(chatId: Long): String {
+        val urlSendMessage = "$BASE_URL$botToken/sendMessage"
+        val sendMenuBody = """
+            {
+                "chat_id": $chatId,
+                "text": "Основное меню",
+                "reply_markup": {
+                    "inline_keyboard": [
+                        [
+                            {
+                                "text": "Учить слова",
+                                "callback_data": "learn_words_clicked"
+                            }
+                        ],
+                        [
+                            {
+                                "text": "Статистика",
+                                "callback_data": "statistics_clicked"
+                            }
+                        ]
+                    ]
+                }
+            }
+        """.trimIndent()
+        val request = HttpRequest.newBuilder().uri(URI.create(urlSendMessage))
+            .header("Content-type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(sendMenuBody))
+            .build()
+        val response = client.send(request, HttpResponse.BodyHandlers.ofString())
+        return response.body()
+    }
 }
 
 fun main(args: Array<String>) {
@@ -30,6 +62,9 @@ fun main(args: Array<String>) {
     val updateIdRegex: Regex = "\"update_id\":(\\d{9})".toRegex()
     val messageTextRegex: Regex = "\"text\":\"(.+?)\"".toRegex()
     val chatIdRegex: Regex = "\"chat\":\\{\"id\":(\\d{10})".toRegex()
+    val dataRegex: Regex = "\"data\":\"(.+?)\"".toRegex()
+
+    val trainer = LearnWordsTrainer()
 
     while (true) {
         Thread.sleep(2000)
@@ -45,17 +80,17 @@ fun main(args: Array<String>) {
             } ?: throw IllegalArgumentException("Invalid updateId")
         }
 
-        val matchResultForMessageText: MatchResult? = messageTextRegex.find(updates)
-        val groupsForMessageText: MatchGroupCollection? = matchResultForMessageText?.groups
-        val text = groupsForMessageText?.get(1)?.value ?: continue
-        println(text)
+        val text = messageTextRegex.find(updates)?.groups?.get(1)?.value ?: continue
+        val chatId = chatIdRegex.find(updates)?.groups?.get(1)?.value?.toLongOrNull() ?: continue
 
-        val matchResultForChatId: MatchResult? = chatIdRegex.find(updates)
-        val groupsForChatId: MatchGroupCollection? = matchResultForChatId?.groups
-        val chatId = groupsForChatId?.get(1)?.value?.toLongOrNull() ?: continue
-        println(chatId)
+        if (text.lowercase() == "/start") {
+            telegramBotService.sendMenu(chatId)
+        }
 
-        telegramBotService.sendMessage(chatId, text)
+        val data = dataRegex.find(updates)?.groups?.get(1)?.value ?: continue
+        if (data == "statistics_clicked") {
+            telegramBotService.sendMessage(chatId, "Выучено 10 из 10 слов | 100%")
+        }
     }
 }
 
