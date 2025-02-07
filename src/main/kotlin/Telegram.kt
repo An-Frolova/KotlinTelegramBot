@@ -39,13 +39,13 @@ class TelegramBotService(private val botToken: String) {
                         [
                             {
                                 "text": "Учить слова",
-                                "callback_data": "learn_words_clicked"
+                                "callback_data": "$LEARN_WORDS_CLICKED"
                             }
                         ],
                         [
                             {
                                 "text": "Статистика",
-                                "callback_data": "statistics_clicked"
+                                "callback_data": "$STATISTICS_CLICKED"
                             }
                         ]
                     ]
@@ -95,10 +95,15 @@ fun main(args: Array<String>) {
         }
 
         val data = dataRegex.find(updates)?.groups?.get(1)?.value ?: continue
-        if (data == "statistics_clicked") {
-            telegramBotService.sendMessage(chatId, "Выучено 10 из 10 слов | 100%")
+        if (data == STATISTICS_CLICKED) {
+            val statistics = trainer.getStatistic(trainer.dictionary)
+            val statisticsString = "Выучено ${statistics.correctAnswersCount} из ${statistics.totalCount} слов " +
+                    "| ${statistics.percent}%\n"
+            telegramBotService.sendMessage(chatId, statisticsString)
         }
     }
 }
 
 const val BASE_URL = "https://api.telegram.org/bot"
+const val STATISTICS_CLICKED = "statistics_clicked"
+const val LEARN_WORDS_CLICKED = "learn_words_clicked"
