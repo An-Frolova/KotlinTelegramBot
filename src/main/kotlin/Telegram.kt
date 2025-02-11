@@ -59,6 +59,47 @@ class TelegramBotService(private val botToken: String) {
         val response = client.send(request, HttpResponse.BodyHandlers.ofString())
         return response.body()
     }
+
+    fun sendQuestion(chatId: Long, question: Question): String {
+        val variants = question.variants.mapIndexed { _, word -> word.translate }
+        val callbacks = question.variants.mapIndexed { index, _ -> CALLBACK_DATA_ANSWER_PREFIX + index }
+
+        val urlSendMessage = "$BASE_URL$botToken/sendMessage"
+        val sendQuestionBody = """
+            {
+                "chat_id": $chatId,
+                "text": "${question.correctAnswer.original}",
+                "reply_markup": {
+                    "inline_keyboard": [
+                        [
+                            {
+                                "text": "${variants[0]}",
+                                "callback_data": "${callbacks[0]}"
+                            },
+                            {
+                                "text": "${variants[1]}",
+                                "callback_data": "${callbacks[1]}"
+                            },
+                            {
+                                "text": "${variants[2]}",
+                                "callback_data": "${callbacks[2]}"
+                            },
+                            {
+                                "text": "${variants[3]}",
+                                "callback_data": "${callbacks[3]}"
+                            }
+                        ]
+                    ]
+                }
+            }
+        """.trimIndent()
+        val request = HttpRequest.newBuilder().uri(URI.create(urlSendMessage))
+            .header("Content-type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(sendQuestionBody))
+            .build()
+        val response = client.send(request, HttpResponse.BodyHandlers.ofString())
+        return response.body()
+    }
 }
 
 fun main(args: Array<String>) {
@@ -100,10 +141,27 @@ fun main(args: Array<String>) {
             val statisticsString = "Выучено ${statistics.correctAnswersCount} из ${statistics.totalCount} слов " +
                     "| ${statistics.percent}%\n"
             telegramBotService.sendMessage(chatId, statisticsString)
+        } else if (data == LEARN_WORDS_CLICKED) {
+            checkNextQuestionAndSend(trainer, telegramBotService, chatId)
         }
+    }
+}
+
+fun checkNextQuestionAndSend(
+    trainer: LearnWordsTrainer,
+    telegramBotService: TelegramBotService,
+    chatId: Long,
+) {
+    val question = trainer.getNewQuestion()
+    if (question == null) {
+        val textMessage = "Все слова выучены или в словаре недостаточно слов"
+        telegramBotService.sendMessage(chatId, textMessage)
+    } else {
+        telegramBotService.sendQuestion(chatId, question)
     }
 }
 
 const val BASE_URL = "https://api.telegram.org/bot"
 const val STATISTICS_CLICKED = "statistics_clicked"
 const val LEARN_WORDS_CLICKED = "learn_words_clicked"
+const val CALLBACK_DATA_ANSWER_PREFIX = "answer_"
