@@ -61,8 +61,17 @@ class TelegramBotService(private val botToken: String) {
     }
 
     fun sendQuestion(chatId: Long, question: Question): String {
-        val variants = question.variants.mapIndexed { _, word -> word.translate }
-        val callbacks = question.variants.mapIndexed { index, _ -> CALLBACK_DATA_ANSWER_PREFIX + index }
+
+        val variantsString = question.variants
+            .mapIndexed { index, word ->
+                """
+                    {
+                        "text": "${word.translate}",
+                        "callback_data": "$CALLBACK_DATA_ANSWER_PREFIX${index}"
+                    }    
+                """.trimIndent()
+            }
+            .joinToString(separator = ",")
 
         val urlSendMessage = "$BASE_URL$botToken/sendMessage"
         val sendQuestionBody = """
@@ -72,22 +81,7 @@ class TelegramBotService(private val botToken: String) {
                 "reply_markup": {
                     "inline_keyboard": [
                         [
-                            {
-                                "text": "${variants[0]}",
-                                "callback_data": "${callbacks[0]}"
-                            },
-                            {
-                                "text": "${variants[1]}",
-                                "callback_data": "${callbacks[1]}"
-                            },
-                            {
-                                "text": "${variants[2]}",
-                                "callback_data": "${callbacks[2]}"
-                            },
-                            {
-                                "text": "${variants[3]}",
-                                "callback_data": "${callbacks[3]}"
-                            }
+                            $variantsString
                         ]
                     ]
                 }
@@ -136,13 +130,15 @@ fun main(args: Array<String>) {
         }
 
         val data = dataRegex.find(updates)?.groups?.get(1)?.value ?: continue
-        if (data == STATISTICS_CLICKED) {
-            val statistics = trainer.getStatistic(trainer.dictionary)
-            val statisticsString = "Выучено ${statistics.correctAnswersCount} из ${statistics.totalCount} слов " +
-                    "| ${statistics.percent}%\n"
-            telegramBotService.sendMessage(chatId, statisticsString)
-        } else if (data == LEARN_WORDS_CLICKED) {
-            checkNextQuestionAndSend(trainer, telegramBotService, chatId)
+        when (data) {
+            STATISTICS_CLICKED -> {
+                val statistics = trainer.getStatistic(trainer.dictionary)
+                val statisticsString = "Выучено ${statistics.correctAnswersCount} из ${statistics.totalCount} слов " +
+                        "| ${statistics.percent}%\n"
+                telegramBotService.sendMessage(chatId, statisticsString)
+            }
+
+            LEARN_WORDS_CLICKED -> checkNextQuestionAndSend(trainer, telegramBotService, chatId)
         }
     }
 }
