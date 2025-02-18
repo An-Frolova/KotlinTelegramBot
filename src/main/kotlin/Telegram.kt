@@ -145,8 +145,8 @@ fun main(args: Array<String>) {
                 val answerMessage = if (trainer.isAnswerCorrect(userAnswerIndex)) {
                     "Правильно!"
                 } else {
-                    val question = trainer.question
-                    "Неправильно! ${question?.correctAnswer?.original} - это ${question?.correctAnswer?.translate}"
+                    val correctAnswer = trainer.question?.correctAnswer
+                    "Неправильно! ${correctAnswer?.original} - это ${correctAnswer?.translate}"
                 }
                 telegramBotService.sendMessage(chatId, answerMessage)
                 checkNextQuestionAndSend(trainer, telegramBotService, chatId)
