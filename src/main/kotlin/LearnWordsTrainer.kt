@@ -22,7 +22,9 @@ class LearnWordsTrainer(
     private val countOfWordsForQuestion: Int = 4,
 ) {
 
-    private var question: Question? = null
+    private var _question: Question? = null
+    val question: Question?
+        get() = _question
     val dictionary = loadDictionary()
 
     private fun loadDictionary(): List<Word> {
@@ -74,13 +76,13 @@ class LearnWordsTrainer(
             }
             questionWordsMList.shuffle()
         }
-        question = Question(questionWordsMList, correctAnswer)
-        return question
+        _question = Question(questionWordsMList, correctAnswer)
+        return _question
     }
 
     fun isAnswerCorrect(userAnswerIndex: Int?): Boolean {
-        return question?.let {
-            val correctAnswerIndex = it.variants.indexOf(it.correctAnswer) + 1
+        return _question?.let {
+            val correctAnswerIndex = it.variants.indexOf(it.correctAnswer)
             if (userAnswerIndex == correctAnswerIndex) {
                 it.correctAnswer.correctAnswersCount++
                 saveDictionary(it.correctAnswer)
@@ -91,12 +93,12 @@ class LearnWordsTrainer(
         } ?: false
     }
 
-    fun getStatistic(dictionary: List<Word>): Statistics {
-        val totalCount = dictionary.size
-        val correctAnswersCount = dictionary.filter { it.correctAnswersCount >= correctAnswersToLearnWord }.size
-        val percent = ((correctAnswersCount.toDouble()) / (totalCount.toDouble()) * AS_DECIMAL).toInt()
-        return Statistics(totalCount, correctAnswersCount, percent)
+        fun getStatistic(dictionary: List<Word>): Statistics {
+            val totalCount = dictionary.size
+            val correctAnswersCount = dictionary.filter { it.correctAnswersCount >= correctAnswersToLearnWord }.size
+            val percent = ((correctAnswersCount.toDouble()) / (totalCount.toDouble()) * AS_DECIMAL).toInt()
+            return Statistics(totalCount, correctAnswersCount, percent)
+        }
     }
-}
 
-const val AS_DECIMAL = 100
+    const val AS_DECIMAL = 100
