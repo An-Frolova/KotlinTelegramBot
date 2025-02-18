@@ -130,15 +130,27 @@ fun main(args: Array<String>) {
         }
 
         val data = dataRegex.find(updates)?.groups?.get(1)?.value ?: continue
-        when (data) {
-            STATISTICS_CLICKED -> {
+        when {
+            data == STATISTICS_CLICKED -> {
                 val statistics = trainer.getStatistic(trainer.dictionary)
                 val statisticsString = "Выучено ${statistics.correctAnswersCount} из ${statistics.totalCount} слов " +
                         "| ${statistics.percent}%\n"
                 telegramBotService.sendMessage(chatId, statisticsString)
             }
 
-            LEARN_WORDS_CLICKED -> checkNextQuestionAndSend(trainer, telegramBotService, chatId)
+            data == LEARN_WORDS_CLICKED -> checkNextQuestionAndSend(trainer, telegramBotService, chatId)
+
+            data.startsWith(CALLBACK_DATA_ANSWER_PREFIX) -> {
+                val userAnswerIndex: Int? = data.substringAfter("_").toIntOrNull()
+                val answerMessage = if (trainer.isAnswerCorrect(userAnswerIndex)) {
+                    "Правильно!"
+                } else {
+                    val question = trainer.question
+                    "Неправильно! ${question?.correctAnswer?.original} - это ${question?.correctAnswer?.translate}"
+                }
+                telegramBotService.sendMessage(chatId, answerMessage)
+                checkNextQuestionAndSend(trainer, telegramBotService, chatId)
+            }
         }
     }
 }
