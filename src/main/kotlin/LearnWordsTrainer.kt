@@ -18,6 +18,7 @@ data class Statistics(
 )
 
 class LearnWordsTrainer(
+    private val fileName: String = "words.txt",
     private val correctAnswersToLearnWord: Int = 3,
     private val countOfWordsForQuestion: Int = 4,
 ) {
@@ -28,7 +29,10 @@ class LearnWordsTrainer(
     val dictionary = loadDictionary()
 
     private fun loadDictionary(): List<Word> {
-        val wordsFile = File("words.txt")
+        val wordsFile = File(fileName)
+        if (!wordsFile.exists()) {
+            File("words.txt").copyTo(wordsFile)
+        }
         val dictionary = mutableListOf<Word>()
         wordsFile.forEachLine { it ->
             val line = it.split("|")
@@ -43,18 +47,12 @@ class LearnWordsTrainer(
         return dictionary
     }
 
-    private fun saveDictionary(learnedWord: Word) {
-        val dictionaryFile = File("words.txt")
-        val lines = dictionaryFile.readLines().toMutableList()
-        for (i in lines.indices) {
-            val parts = lines[i].split("|")
-            if (parts[0] == learnedWord.original) {
-                val updatedLine = "${parts[0]}|${parts[1]}|${learnedWord.correctAnswersCount}"
-                lines[i] = updatedLine
-                break
-            }
+    fun saveDictionary() {
+        val dictionaryFile = File(fileName)
+        dictionaryFile.writeText("")
+        for (word in dictionary) {
+            dictionaryFile.appendText("${word.original}|${word.translate}|${word.correctAnswersCount}\n")
         }
-        dictionaryFile.writeText(lines.joinToString("\n"))
     }
 
     fun getNewQuestion(): Question? {
@@ -85,7 +83,7 @@ class LearnWordsTrainer(
             val correctAnswerIndex = it.variants.indexOf(it.correctAnswer)
             if (userAnswerIndex == correctAnswerIndex) {
                 it.correctAnswer.correctAnswersCount++
-                saveDictionary(it.correctAnswer)
+                saveDictionary()
                 true
             } else {
                 false
@@ -93,12 +91,12 @@ class LearnWordsTrainer(
         } ?: false
     }
 
-        fun getStatistic(dictionary: List<Word>): Statistics {
-            val totalCount = dictionary.size
-            val correctAnswersCount = dictionary.filter { it.correctAnswersCount >= correctAnswersToLearnWord }.size
-            val percent = ((correctAnswersCount.toDouble()) / (totalCount.toDouble()) * AS_DECIMAL).toInt()
-            return Statistics(totalCount, correctAnswersCount, percent)
-        }
+    fun getStatistic(dictionary: List<Word>): Statistics {
+        val totalCount = dictionary.size
+        val correctAnswersCount = dictionary.filter { it.correctAnswersCount >= correctAnswersToLearnWord }.size
+        val percent = ((correctAnswersCount.toDouble()) / (totalCount.toDouble()) * AS_DECIMAL).toInt()
+        return Statistics(totalCount, correctAnswersCount, percent)
     }
+}
 
-    const val AS_DECIMAL = 100
+const val AS_DECIMAL = 100
