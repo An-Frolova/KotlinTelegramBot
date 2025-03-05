@@ -158,15 +158,20 @@ fun main(args: Array<String>) {
     val trainers = HashMap<Long, LearnWordsTrainer>()
 
     while (true) {
-        Thread.sleep(2000)
-        val responseString: String = telegramBotService.getUpdates(lastUpdateId)
-        println(responseString)
+        try {
+            Thread.sleep(2000)
+            val responseString: String = telegramBotService.getUpdates(lastUpdateId)
+            println(responseString)
 
-        val response: Response = json.decodeFromString(responseString)
-        if (response.result.isEmpty()) continue
-        val sortedUpdates = response.result.sortedBy { it.updateId }
-        sortedUpdates.forEach { handleUpdates(it, json, trainers, telegramBotService) }
-        lastUpdateId = sortedUpdates.last().updateId + 1
+            val response: Response = json.decodeFromString(responseString)
+            if (response.result.isEmpty()) continue
+            val sortedUpdates = response.result.sortedBy { it.updateId }
+            sortedUpdates.forEach { handleUpdates(it, json, trainers, telegramBotService) }
+            lastUpdateId = sortedUpdates.last().updateId + 1
+        } catch (e: Exception) {
+            println("Ошибка при получении обновлений: ${e.message}")
+            Thread.sleep(5000)
+        }
     }
 }
 
